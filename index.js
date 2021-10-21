@@ -27,21 +27,67 @@ to finish the program
 
 let userData = [];
 let userToDoList = [];
+let activeProgram = false;
 const askForId = "Insert your ID below:";
-const errorMsgId = "Invalid ID. Please try again.";
 let chosenId;
 let validId = false;
 let optionChosen;
 let validOption = false;
 let addToDo = false;
+let indexCount = 0;
 let showToDo = false;
+let modifyToDo = false;
+let toModify;
+let validModify = false;
+let deleteToDo = false;
+let toDelete;
+let indexDeleteCount = 0;
+let validDelete = false;
 let newTask;
 let validTask = false;
-const giveOption = "If you would like to see your ToDo list type in 1. If you would like to add a new item to the list, type in 2.";
-const errorMsgOption = "Option incorrect. Please try again."
-const addItem = "Please type in your new task:";
-const errorMsgTask = "Invalid task. Please try again."
-const errorMsgTaskDup = "This task is already on your list. Please add a new task.";
+const options = 
+[
+    { // 0
+        number: 1,
+        text: "If you would like to see your ToDo list type in 1."
+    },
+    { // 1
+        number: 2,
+        text: "If you would like to add a new item to the list, type in 2.",
+        action: "Please type in your new task:",
+        success: "Task added successfully!"
+    },
+    { // 2
+        number: 3,
+        text: "If you would like to update a pre-existing item, type in 3.",
+        action: "Please type in the task you would like to update as done: ",
+        success: "Status changed to: completed."
+    },
+    { // 3
+        number: 4,
+        text: "To delete a pre-existing item, type in 4.",
+        action: "Please type in the name of the task you would like to delete:",
+        success: "Task was deleted successfully!"
+    }
+];
+const errors = [
+    { // 0
+        type: 'id',
+        text: "Invalid ID. Please try again."
+    },
+    { // 1
+        type: 'option',
+        text: "Option incorrect. Please try again."
+    },
+    { // 2
+        type: 'task',
+        text: "Invalid task. Please try again."
+    },
+    { // 3
+        type: 'duplicate',
+        text: "This task is already on your list. Please add a new task."
+    }
+];
 
 function strDisplayAlert (arr){
     let str = "";
@@ -52,9 +98,32 @@ function strDisplayAlert (arr){
     return str;
 }
 
+function strDisplayOptions (arr) {
+    let str = "";
+    for(let i = 0; i < arr.length; i++){
+        str += arr[i].text;
+        str += "\n";
+    }
+    return str;
+}
+
+function askId() {
+    activeProgram = confirm(strDisplayAlert(userData));
+    if (!activeProgram){
+        alert("See you soon!");
+    }
+    else{
+        do {
+            chosenId = parseInt(prompt(askForId));
+            validId = isValidId(chosenId);
+        } while (!validId); 
+    }
+
+}
+
 function isValidId(input){
     if(isNaN(input) || input === null || input === 0){
-        alert(errorMsgId);
+        alert(errors[1].text);
         return false;
     }
     else {
@@ -62,7 +131,7 @@ function isValidId(input){
             return true;  
         }
         else{
-            alert(errorMsgId);
+            alert(errors[0].text);
             return false;
         }
     }
@@ -70,21 +139,29 @@ function isValidId(input){
 
 function isValidOption(input){
     if(isNaN(input) || input === null || input === 0){
-        alert(errorMsgOption);
+        alert(errors[1].text);
         return false;
     }
     else {
-        if(input === 1 || input === 2){
-            if(input === 1){
-                showToDo = true;
+        if(input > 0 && input < 5){
+            switch(input){
+                case 1: 
+                    showToDo = true;
+                    break;
+                case 2:
+                    addToDo = true;
+                    break;
+                case 3:
+                    modifyToDo = true;
+                    break;
+                case 4:
+                    deleteToDo = true;
+                    break;
             }
-            else {
-                addToDo = true;
-            }
-            return true;  
+            return true;
         }
         else{
-            alert(errorMsgOption);
+            alert(errors[1].text);
             return false;
         }
     }
@@ -92,48 +169,115 @@ function isValidOption(input){
 
 function isValidTask(task, list){
     if(!isNaN(task) || task === null || task === 0){
-        alert(errorMsgTask);
+        alert(errors[2].text);
         return false;
     }
     else {
-        for(let i = 0; i < list.length; i++){
-            console.log(list[i]);
-            console.log(list[i] === newTask);
-            if(list[i] === newTask){
-              alert(errorMsgTaskDup); 
-              return false; 
-            }
+        if (isDuplicate(task, list)){
+            alert(errors[3].text); 
+            return false;   
         }
         return true;
     }
 }
 
+function isDuplicate(task, list){
+    for(let i = 0; i < list.length; i++){
+        if(list[i] === task){ 
+          return true; 
+        }
+    }
+}
+
+function resetAll () {
+    userToDoList = [];
+    chosenId = 0;
+    validId = false;
+    optionChosen = 0;
+    validOption = false;
+    addToDo = false;
+    indexCount = 0;
+    showToDo = false;
+    modifyToDo = false;
+    toModify = 0;
+    validModify = false;
+    deleteToDo = false;
+    toDelete = 0;
+    validDelete = false;
+    newTask = 0;
+    validTask = false;
+}
+
 for(let i = 0; i < users.length; i++){
     userData.push([users[i].id, users[i].name, users[i].address.city]);
 }
-alert(strDisplayAlert(userData));
-do {
-    chosenId = parseInt(prompt(askForId));
-    validId = isValidId(chosenId);
-} while (!validId);
-console.log("ID: " + chosenId);
 
-for (let i = 0; i < todos.length ; i++){
-    if(todos[i].userId === chosenId){
-        userToDoList.push(todos[i].title);
-    }
-}
+askId();
 do {
-    optionChosen = parseInt(prompt(giveOption));
-    validOption = isValidOption(optionChosen);    
-} while (!validOption);
-if(showToDo){
-    alert(strDisplayAlert(userToDoList));
-}
-else if (addToDo) {
-    do{
-        newTask = prompt(addItem);
-        validTask = isValidTask(newTask, userToDoList);    
-    } while (!validTask);
-    userToDoList.push(newTask);
-}
+    for (let i = 0; i < todos.length ; i++){
+        indexCount++;
+        if(todos[i].userId === chosenId){
+            userToDoList.push(todos[i].title);
+        }
+        else{
+            break;
+        }
+        console.log(indexCount);
+    }
+    do {
+        optionChosen = parseInt(prompt(strDisplayOptions(options)));
+        validOption = isValidOption(optionChosen);    
+    } while (!validOption);
+    if(showToDo){
+        alert(strDisplayAlert(userToDoList));
+    }
+    else if (addToDo) {
+        do{
+            newTask = prompt(options[1].action);
+            validTask = isValidTask(newTask, userToDoList);    
+        } while (!validTask);
+        const newToDo = {
+            userId: chosenId,
+            id: (indexCount-1), 
+            title: newTask,
+            completed: false
+        };
+        console.log(newToDo);
+        todos.splice((indexCount-1), 0, newToDo);
+        for(let i = indexCount; i < todos.length; i++){
+            todos[i].id ++;
+        }
+        alert(options[1].success);
+    }
+    else if (modifyToDo) {
+        do {
+            toModify = prompt(options[2].action);
+            validModify = isDuplicate(toModify, userToDoList);
+        } while (!validModify);
+        for(let i = 0; i < indexCount; i++){
+            if(toModify === todos[i].title){
+                todos[i].completed = true;
+                alert(options[2].success);
+                break;
+            }
+        }
+    }
+    else if (deleteToDo) {
+        do {
+            toDelete = prompt(options[3].action);
+            validDelete = isDuplicate(toDelete, userToDoList);
+        } while (!validDelete);
+        for(let i = 0; i < indexCount; i++){
+            if(toDelete != todos[i].title){
+                indexDeleteCount ++;
+            }
+            else{
+                break;
+            }
+        }
+        todos.splice(indexDeleteCount, 1);
+        alert(options[3].success);
+    }
+    resetAll();
+    askId();
+} while(activeProgram);
